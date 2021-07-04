@@ -9558,22 +9558,25 @@ async function run() {
     const additionalAssigneesString = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('assignees', { required: false });
     const additionalAssignees = additionalAssigneesString == null ? [] : additionalAssigneesString
       .split(',')
-      .map((assigneeName) => assigneeName.trim());
+      .map((assigneeName) => assigneeName.trim())
+      .filter(assigneeName => assigneeName.length > 0);
 
     // don't assign people that are already assigned,
     // and don't assign the author twice (also as additional assignee)
     const peopleToAssign = [author]
       .concat(additionalAssignees
         .filter(additionalAssignee => additionalAssignee != author))
-      .filter(assigneeName => !assignees.includes(assigneeName));
+      .filter(assigneeName => !assignees.includes(assigneeName))
+      .filter(assigneeName => assigneeName.length > 0);
     
     const requestedReviewersString = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('reviewers', { required: false });
     const requestedReviewers = requestedReviewersString == null ? [] : requestedReviewersString
       .split(',')
-      .map((reviewerName) => reviewerName.trim());
+      .map((reviewerName) => reviewerName.trim())
+      .filter(reviewerName => reviewerName.length > 0);
 
     const octokit = (0,_actions_github__WEBPACK_IMPORTED_MODULE_1__.getOctokit)(token);
-    
+
     if (peopleToAssign.length == 0) {
       _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`No one to assign.`);
     } else {
@@ -9584,7 +9587,7 @@ async function run() {
         assignees: peopleToAssign
       });
       _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug(JSON.stringify(assignResult));
-      _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`@${peopleToAssign} were assigned to the pull request: #${number}`);
+      _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`${peopleToAssign} were assigned to the pull request: #${number}`);
     }
 
     if (requestedReviewers.length == 0) {
@@ -9597,7 +9600,7 @@ async function run() {
         reviewers: requestedReviewers
       });
       _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug(JSON.stringify(requestReviewResult));
-      _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`@${requestedReviewers} were requested to review the pull request: #${number}`);
+      _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`${requestedReviewers} were requested to review the pull request: #${number}`);
     }
   } catch (error) {
     _actions_core__WEBPACK_IMPORTED_MODULE_0__.setFailed(error.message);
