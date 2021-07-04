@@ -9,6 +9,9 @@ async function run() {
     }
     const { assignees, number, user: { login: author, type } } = context.payload.pull_request;
 
+    const assigneesNames = assignees
+      .map(assignee => assignee.login);
+
     // Get additional assignees apart from the author
     const additionalAssigneesString = core.getInput('assignees', { required: false });
     const additionalAssignees = additionalAssigneesString == null ? [] : additionalAssigneesString
@@ -21,16 +24,24 @@ async function run() {
     const peopleToAssign = [author]
       .concat(additionalAssignees
         .filter(additionalAssignee => additionalAssignee != author))
-      .filter(assigneeName => !assignees.includes(assigneeName))
+      .filter(assigneeName => !assigneesNames.includes(assigneeName))
       .filter(assigneeName => assigneeName.length > 0);
 
-    core.info('Already assigned: ' + assignees);
-    
+    core.info('Already assigned: ' + assigneesNames);
+
     const requestedReviewersString = core.getInput('reviewers', { required: false });
     const requestedReviewers = requestedReviewersString == null ? [] : requestedReviewersString
       .split(',')
       .map((reviewerName) => reviewerName.trim())
-      .filter(reviewerName => reviewerName.length > 0);
+      .filter(reviewerName => reviewerName.length > 0)
+      .filter(reviewerName => {
+        if (reviewerName == author) {
+          core.info("Cannot request a review from PR author.");
+          return false;
+        } else {
+          return true;
+        }
+      });
 
     const octokit = getOctokit(token);
 

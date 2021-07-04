@@ -9554,6 +9554,9 @@ async function run() {
     }
     const { assignees, number, user: { login: author, type } } = _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.payload.pull_request;
 
+    const assigneesNames = assignees
+      .map(assignee => assignee.login);
+
     // Get additional assignees apart from the author
     const additionalAssigneesString = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('assignees', { required: false });
     const additionalAssignees = additionalAssigneesString == null ? [] : additionalAssigneesString
@@ -9566,16 +9569,24 @@ async function run() {
     const peopleToAssign = [author]
       .concat(additionalAssignees
         .filter(additionalAssignee => additionalAssignee != author))
-      .filter(assigneeName => !assignees.includes(assigneeName))
+      .filter(assigneeName => !assigneesNames.includes(assigneeName))
       .filter(assigneeName => assigneeName.length > 0);
 
-    _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Already assigned: ' + assignees);
-    
+    _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Already assigned: ' + assigneesNames);
+
     const requestedReviewersString = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('reviewers', { required: false });
     const requestedReviewers = requestedReviewersString == null ? [] : requestedReviewersString
       .split(',')
       .map((reviewerName) => reviewerName.trim())
-      .filter(reviewerName => reviewerName.length > 0);
+      .filter(reviewerName => reviewerName.length > 0)
+      .filter(reviewerName => {
+        if (reviewerName == author) {
+          _actions_core__WEBPACK_IMPORTED_MODULE_0__.info("Cannot request a review from PR author.");
+          return false;
+        } else {
+          return true;
+        }
+      });
 
     const octokit = (0,_actions_github__WEBPACK_IMPORTED_MODULE_1__.getOctokit)(token);
 
