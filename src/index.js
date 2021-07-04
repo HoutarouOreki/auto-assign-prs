@@ -23,6 +23,8 @@ async function run() {
         .filter(additionalAssignee => additionalAssignee != author))
       .filter(assigneeName => !assignees.includes(assigneeName))
       .filter(assigneeName => assigneeName.length > 0);
+
+    core.info('Already assigned: ' + assignees);
     
     const requestedReviewersString = core.getInput('reviewers', { required: false });
     const requestedReviewers = requestedReviewersString == null ? [] : requestedReviewersString

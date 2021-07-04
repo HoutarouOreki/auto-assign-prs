@@ -9568,6 +9568,8 @@ async function run() {
         .filter(additionalAssignee => additionalAssignee != author))
       .filter(assigneeName => !assignees.includes(assigneeName))
       .filter(assigneeName => assigneeName.length > 0);
+
+    _actions_core__WEBPACK_IMPORTED_MODULE_0__.info('Already assigned: ' + assignees);
     
     const requestedReviewersString = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('reviewers', { required: false });
     const requestedReviewers = requestedReviewersString == null ? [] : requestedReviewersString
