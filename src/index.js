@@ -9,12 +9,21 @@ async function run() {
     }
     const { assignees, number, user: { login: author, type } } = context.payload.pull_request;
 
-    if (assignees.length > 0) {
-      core.info(`Assigning author has been skipped since the pull request is already assigned to someone`);
-      return;
-    }
-    if (type === 'Bot') {
-      core.info("Assigning author has been skipped since the author is a bot");
+    // Get additional assignees apart from the author
+    const additionalAssigneesString = core.getInput('assignees', { required: true });
+    const additionalAssignees = additionalAssigneesString
+      .split(',')
+      .map((assigneeName) => assigneeName.trim());
+
+    // don't assign people that are already assigned,
+    // and don't assign the author twice (also as additional assignee)
+    const peopleToAssign = [author]
+      .concat(additionalAssignees
+        .filter(additionalAssignee => additionalAssignee != author))
+      .filter(assigneeName => !assignees.includes(assigneeName));
+
+    if (peopleToAssign.length == 0) {
+      core.info(`No one to assign.`);
       return;
     }
 
@@ -23,10 +32,10 @@ async function run() {
       owner: context.repo.owner,
       repo: context.repo.repo,
       issue_number: number,
-      assignees: [author]
+      assignees: peopleToAssign
     });
     core.debug(JSON.stringify(result));
-    core.info(`@${author} has been assigned to the pull request: #${number}`);
+    core.info(`@${peopleToAssign} were assigned to the pull request: #${number}`);
   } catch (error) {
     core.setFailed(error.message);
   }

@@ -1,14 +1,17 @@
-name: 'Auto Author Assign'
-description: 'Assign author to pull requests when the pull requests are opened.'
-author: 'toshimaru'
+name: "Auto Assign PRs"
+description: "Assign author, and other specified users, to pull requests when the pull requests are opened."
+author: "HoutarouOreki"
 inputs:
   repo-token:
-    description: 'A token for the repository'
+    description: "A token for the repository"
     required: true
-    default: '${{ github.token }}'
+    default: "${{ github.token }}"
+  assignees:
+    description: "Comma separated list of user names"
+    required: false
 runs:
-  using: 'node12'
-  main: 'dist/index.js'
+  using: "node12"
+  main: "dist/index.js"
 branding:
-  icon: 'user-plus'
-  color: 'red'
+  icon: "user-plus"
+  color: "red"
