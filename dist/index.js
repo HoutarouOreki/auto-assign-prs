@@ -9555,8 +9555,8 @@ async function run() {
     const { assignees, number, user: { login: author, type } } = _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.payload.pull_request;
 
     // Get additional assignees apart from the author
-    const additionalAssigneesString = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('assignees', { required: true });
-    const additionalAssignees = additionalAssigneesString
+    const additionalAssigneesString = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('assignees', { required: false });
+    const additionalAssignees = additionalAssigneesString == null ? [] : additionalAssigneesString
       .split(',')
       .map((assigneeName) => assigneeName.trim());
 
@@ -9566,24 +9566,43 @@ async function run() {
       .concat(additionalAssignees
         .filter(additionalAssignee => additionalAssignee != author))
       .filter(assigneeName => !assignees.includes(assigneeName));
+    
+    const requestedReviewersString = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('reviewers', { required: false });
+    const requestedReviewers = requestedReviewersString == null ? [] : requestedReviewersString
+      .split(',')
+      .map((reviewerName) => reviewerName.trim());
 
     if (peopleToAssign.length == 0) {
       _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`No one to assign.`);
-      return;
+    } else {
+
+      const octokit = (0,_actions_github__WEBPACK_IMPORTED_MODULE_1__.getOctokit)(token);
+      const assignResult = await octokit.issues.addAssignees({
+        owner: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner,
+        repo: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo,
+        issue_number: number,
+        assignees: peopleToAssign
+      });
+      _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug(JSON.stringify(assignResult));
+      _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`@${peopleToAssign} were assigned to the pull request: #${number}`);
     }
 
-    const octokit = (0,_actions_github__WEBPACK_IMPORTED_MODULE_1__.getOctokit)(token);
-    const result = await octokit.issues.addAssignees({
-      owner: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner,
-      repo: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo,
-      issue_number: number,
-      assignees: peopleToAssign
-    });
-    _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug(JSON.stringify(result));
-    _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`@${peopleToAssign} were assigned to the pull request: #${number}`);
+    if (requestedReviewers.length == 0) {
+      _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`No one to request for a review.`);
+    } else {
+      const requestReviewResult = await octokit.pulls.requestReviewers({
+        owner: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner,
+        repo: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo,
+        pull_number: number,
+        reviewers: requestedReviewers
+      });
+      _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug(JSON.stringify(requestReviewResult));
+      _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`@${requestedReviewers} were requested to review the pull request: #${number}`);
+    }
   } catch (error) {
     _actions_core__WEBPACK_IMPORTED_MODULE_0__.setFailed(error.message);
   }
+
 }
 
 run();

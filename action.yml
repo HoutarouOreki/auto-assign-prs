@@ -1,5 +1,5 @@
 name: "Auto Assign PRs"
-description: "Assign author, and other specified users, to pull requests when the pull requests are opened."
+description: "Assign author, and other specified users, to pull requests when the pull requests are opened, and/or request reviews"
 author: "HoutarouOreki"
 inputs:
   repo-token:
@@ -8,6 +8,9 @@ inputs:
     default: "${{ github.token }}"
   assignees:
     description: "Comma separated list of user names"
+    required: false
+  reviewers:
+    description: "Comma seperated list of user names"
     required: false
 runs:
   using: "node12"

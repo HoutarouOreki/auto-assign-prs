@@ -10,8 +10,8 @@ async function run() {
     const { assignees, number, user: { login: author, type } } = context.payload.pull_request;
 
     // Get additional assignees apart from the author
-    const additionalAssigneesString = core.getInput('assignees', { required: true });
-    const additionalAssignees = additionalAssigneesString
+    const additionalAssigneesString = core.getInput('assignees', { required: false });
+    const additionalAssignees = additionalAssigneesString == null ? [] : additionalAssigneesString
       .split(',')
       .map((assigneeName) => assigneeName.trim());
 
@@ -21,24 +21,43 @@ async function run() {
       .concat(additionalAssignees
         .filter(additionalAssignee => additionalAssignee != author))
       .filter(assigneeName => !assignees.includes(assigneeName));
+    
+    const requestedReviewersString = core.getInput('reviewers', { required: false });
+    const requestedReviewers = requestedReviewersString == null ? [] : requestedReviewersString
+      .split(',')
+      .map((reviewerName) => reviewerName.trim());
 
     if (peopleToAssign.length == 0) {
       core.info(`No one to assign.`);
-      return;
+    } else {
+
+      const octokit = getOctokit(token);
+      const assignResult = await octokit.issues.addAssignees({
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        issue_number: number,
+        assignees: peopleToAssign
+      });
+      core.debug(JSON.stringify(assignResult));
+      core.info(`@${peopleToAssign} were assigned to the pull request: #${number}`);
     }
 
-    const octokit = getOctokit(token);
-    const result = await octokit.issues.addAssignees({
-      owner: context.repo.owner,
-      repo: context.repo.repo,
-      issue_number: number,
-      assignees: peopleToAssign
-    });
-    core.debug(JSON.stringify(result));
-    core.info(`@${peopleToAssign} were assigned to the pull request: #${number}`);
+    if (requestedReviewers.length == 0) {
+      core.info(`No one to request for a review.`);
+    } else {
+      const requestReviewResult = await octokit.pulls.requestReviewers({
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        pull_number: number,
+        reviewers: requestedReviewers
+      });
+      core.debug(JSON.stringify(requestReviewResult));
+      core.info(`@${requestedReviewers} were requested to review the pull request: #${number}`);
+    }
   } catch (error) {
     core.setFailed(error.message);
   }
+
 }
 
 run();
