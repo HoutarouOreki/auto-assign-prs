@@ -27,11 +27,11 @@ async function run() {
       .split(',')
       .map((reviewerName) => reviewerName.trim());
 
+    const octokit = getOctokit(token);
+    
     if (peopleToAssign.length == 0) {
       core.info(`No one to assign.`);
     } else {
-
-      const octokit = getOctokit(token);
       const assignResult = await octokit.issues.addAssignees({
         owner: context.repo.owner,
         repo: context.repo.repo,

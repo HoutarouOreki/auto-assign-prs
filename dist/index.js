@@ -9572,11 +9572,11 @@ async function run() {
       .split(',')
       .map((reviewerName) => reviewerName.trim());
 
+    const octokit = (0,_actions_github__WEBPACK_IMPORTED_MODULE_1__.getOctokit)(token);
+    
     if (peopleToAssign.length == 0) {
       _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`No one to assign.`);
     } else {
-
-      const octokit = (0,_actions_github__WEBPACK_IMPORTED_MODULE_1__.getOctokit)(token);
       const assignResult = await octokit.issues.addAssignees({
         owner: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner,
         repo: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo,
