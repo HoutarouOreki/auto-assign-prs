@@ -9554,12 +9554,21 @@ async function run() {
     }
     const { assignees, number, user: { login: author, type } } = _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.payload.pull_request;
 
-    if (assignees.length > 0) {
-      _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`Assigning author has been skipped since the pull request is already assigned to someone`);
-      return;
-    }
-    if (type === 'Bot') {
-      _actions_core__WEBPACK_IMPORTED_MODULE_0__.info("Assigning author has been skipped since the author is a bot");
+    // Get additional assignees apart from the author
+    const additionalAssigneesString = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput('assignees', { required: true });
+    const additionalAssignees = additionalAssigneesString
+      .split(',')
+      .map((assigneeName) => assigneeName.trim());
+
+    // don't assign people that are already assigned,
+    // and don't assign the author twice (also as additional assignee)
+    const peopleToAssign = [author]
+      .concat(additionalAssignees
+        .filter(additionalAssignee => additionalAssignee != author))
+      .filter(assigneeName => !assignees.includes(assigneeName));
+
+    if (peopleToAssign.length == 0) {
+      _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`No one to assign.`);
       return;
     }
 
@@ -9568,10 +9577,10 @@ async function run() {
       owner: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.owner,
       repo: _actions_github__WEBPACK_IMPORTED_MODULE_1__.context.repo.repo,
       issue_number: number,
-      assignees: [author]
+      assignees: peopleToAssign
     });
     _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug(JSON.stringify(result));
-    _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`@${author} has been assigned to the pull request: #${number}`);
+    _actions_core__WEBPACK_IMPORTED_MODULE_0__.info(`@${peopleToAssign} were assigned to the pull request: #${number}`);
   } catch (error) {
     _actions_core__WEBPACK_IMPORTED_MODULE_0__.setFailed(error.message);
   }
